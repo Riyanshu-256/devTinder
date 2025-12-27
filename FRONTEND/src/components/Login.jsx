@@ -10,20 +10,20 @@ const Login = () => {
   const [password, setPassword] = useState("Kom@2025");
 
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // ✅ REQUIRED
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
       const res = await axios.post(
         BASE_URL + "/login",
         { emailId, password },
-        { withCredentials: true } // ✅ VERY IMPORTANT
+        { withCredentials: true }
       );
 
-      // ✅ ONLY user object goes to Redux
-      dispatch(addUser(res.data.data));
+      // ONLY user object goes to Redux
+      dispatch(addUser(res.data));
 
-      // ✅ Go to Feed page
+      // Go to Feed page
       navigate("/");
     } catch (err) {
       console.error("Login Error:", err.response?.data || err.message);
