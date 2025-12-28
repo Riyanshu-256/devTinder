@@ -1,37 +1,32 @@
 const UserCard = ({ user }) => {
   if (!user) return null;
 
-  const { firstName, lastName, photoUrl, age, gender, about } = user;
+  const { firstName, lastName, photoUrl, about } = user;
 
   return (
-    <div className="card bg-base-100 w-96 shadow-md">
-      <figure>
-        <img
-          src={
-            photoUrl || "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-          }
-          alt="profile"
-          className="w-full h-72 object-cover"
-        />
-      </figure>
+    <div className="card bg-base-300 w-96 shadow-xl p-4">
+      {/* PROFILE IMAGE */}
+      <img
+        src={photoUrl || "https://geographyandyou.com/images/user-profile.png"}
+        alt="profile"
+        className="w-32 h-32 rounded-full object-cover mx-auto mb-4"
+        onError={(e) => {
+          e.target.src = "https://geographyandyou.com/images/user-profile.png";
+        }}
+      />
 
-      <div className="card-body">
-        <h2 className="card-title">
-          {firstName} {lastName}
-        </h2>
+      {/* NAME */}
+      <h2 className="text-xl font-semibold text-center">
+        {firstName} {lastName}
+      </h2>
 
-        {age && gender && (
-          <p>
-            {age} • {gender}
-          </p>
-        )}
+      {/* ABOUT */}
+      <p className="text-center text-gray-400 mt-2">{about}</p>
 
-        {about && <p>{about}</p>}
-
-        <div className="card-actions justify-end">
-          <button className="btn btn-outline">Ignore</button>
-          <button className="btn btn-primary">Interested</button>
-        </div>
+      {/* ACTION BUTTONS */}
+      <div className="flex justify-center gap-4 mt-4">
+        <button className="btn btn-primary w-20">Ignore</button>
+        <button className="btn btn-secondary w-20">Interested</button>
       </div>
     </div>
   );
