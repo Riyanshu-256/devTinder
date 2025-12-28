@@ -6,59 +6,83 @@ import { BASE_URL } from "../utils/constants";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const [emailId, setEmailId] = useState("komal@gmail.com");
-  const [password, setPassword] = useState("Kom@2025");
+  const [emailId, setEmailId] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
+    if (!emailId || !password) {
+      setError("Email and Password are required");
+      return;
+    }
+
     try {
+      setLoading(true);
+      setError("");
+
       const res = await axios.post(
-        BASE_URL + "/login",
+        `${BASE_URL}/login`,
         { emailId, password },
         { withCredentials: true }
       );
 
-      // ONLY user object goes to Redux
+      // Save user to Redux
       dispatch(addUser(res.data));
 
-      // Go to Feed page
+      // Redirect after login
       navigate("/");
     } catch (err) {
-      console.error("Login Error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center my-10">
-      <div className="card bg-base-300 w-96 shadow-sm">
-        <div className="card-body">
-          <h2 className="card-title">Login</h2>
+    <div className="flex justify-center my-16">
+      <div className="card bg-base-300 w-96 shadow-md">
+        <div className="card-body gap-3">
+          <h2 className="card-title justify-center text-2xl">Login</h2>
 
-          <fieldset className="fieldset py-2">
-            <legend className="fieldset-legend">Email Id</legend>
+          {/* Email */}
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend py-2">Email</legend>
             <input
-              type="text"
+              type="email"
+              className="input w-full"
               value={emailId}
-              className="input"
               onChange={(e) => setEmailId(e.target.value)}
+              placeholder="Enter your email"
             />
           </fieldset>
 
-          <fieldset className="fieldset py-2">
-            <legend className="fieldset-legend">Password</legend>
+          {/* Password */}
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend py-2">Password</legend>
             <input
               type="password"
+              className="input w-full"
               value={password}
-              className="input"
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
             />
           </fieldset>
 
-          <div className="card-actions justify-center py-4">
-            <button className="btn btn-primary w-20" onClick={handleLogin}>
-              Login
+          {/* Error */}
+          {error && <p className="text-error text-sm text-center">{error}</p>}
+
+          {/* Button */}
+          <div className="card-actions justify-center mt-2">
+            <button
+              className="btn btn-primary w-full"
+              onClick={handleLogin}
+              disabled={loading}
+            >
+              {loading ? "Logging in..." : "Login"}
             </button>
           </div>
         </div>
