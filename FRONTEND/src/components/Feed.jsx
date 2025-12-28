@@ -10,15 +10,12 @@ const Feed = () => {
   const feed = useSelector((store) => store.feed);
 
   useEffect(() => {
-    if (feed) return;
-
     const getFeed = async () => {
       try {
         const res = await axios.get(BASE_URL + "/feed", {
           withCredentials: true,
         });
 
-        // ✅ SAFELY HANDLE BACKEND RESPONSE
         const feedData = Array.isArray(res.data) ? res.data : res.data.data;
 
         dispatch(addFeed(feedData));
@@ -28,9 +25,13 @@ const Feed = () => {
     };
 
     getFeed();
-  }, [feed, dispatch]);
+  }, [dispatch]);
 
-  if (!Array.isArray(feed) || feed.length === 0) return null;
+  if (!Array.isArray(feed) || feed.length === 0) {
+    return (
+      <p className="text-center mt-10 text-gray-500">No users available</p>
+    );
+  }
 
   return (
     <div className="flex justify-center my-10">

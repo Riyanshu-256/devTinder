@@ -1,26 +1,35 @@
 const UserCard = ({ user }) => {
-  const { firstName, lastName, photoUrl, age, gender, about, skills } = user;
-  if (!user) return null; // 🔥 REQUIRED
+  if (!user) return null;
 
-  console.log("User from feed:", user);
+  const { firstName, lastName, photoUrl, age, gender, about } = user;
 
   return (
-    <div className="card bg-base-100 w-96 shadow-sm">
+    <div className="card bg-base-100 w-96 shadow-md">
       <figure>
         <img
-          src={user.photoUrl || "https://via.placeholder.com/300"}
-          alt="photo"
+          src={
+            photoUrl || "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+          }
+          alt="profile"
+          className="w-full h-72 object-cover"
         />
       </figure>
 
       <div className="card-body">
-        <h2 className="card-title">{user.firstName + " " + user.lastName}</h2>
+        <h2 className="card-title">
+          {firstName} {lastName}
+        </h2>
 
-        {age && gender && <p>{age + " " + gender}</p>}
-        <p>{user.about}</p>
+        {age && gender && (
+          <p>
+            {age} • {gender}
+          </p>
+        )}
+
+        {about && <p>{about}</p>}
 
         <div className="card-actions justify-end">
-          <button className="btn btn-primary">Ignore</button>
+          <button className="btn btn-outline">Ignore</button>
           <button className="btn btn-primary">Interested</button>
         </div>
       </div>
