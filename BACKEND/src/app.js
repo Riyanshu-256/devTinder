@@ -1,7 +1,11 @@
+require("dotenv").config();
+
 // to create server
 const express = require("express");
+
 // To connect database
 const connectDB = require("./config/database");
+
 // import cookies parser
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -9,7 +13,7 @@ const cors = require("cors");
 // to create application
 const app = express();
 
-// Middleware
+/* ================= MIDDLEWARE ================= */
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -19,10 +23,11 @@ app.use(
 
 // Converts incoming JSON data into req.body
 app.use(express.json());
+
 // Allows server to read cookies from client (req.cookies)
 app.use(cookieParser());
 
-// MANAGE ALL ROUTES
+/* ================= ROUTES ================= */
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
@@ -34,14 +39,16 @@ app.use("/", profileRouter);
 app.use("/request", requestRouter);
 app.use("/", userRouter);
 
-// CONNECT DB + START SERVER
+/* ================= DB + SERVER ================= */
+const PORT = process.env.PORT || 3000;
+
 connectDB()
   .then(() => {
-    console.log("Database connection established...");
-    app.listen(3000, () => {
-      console.log("Server is listening on port 3000...");
+    console.log("Database connection established");
+    app.listen(PORT, () => {
+      console.log(`Server is listening on port ${PORT}`);
     });
   })
-  .catch(() => {
-    console.error("Database cannot be connected");
+  .catch((err) => {
+    console.error("Database cannot be connected", err);
   });
