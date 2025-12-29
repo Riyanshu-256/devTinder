@@ -1,46 +1,46 @@
-// create a express router
 const express = require("express");
-
-// create a profileRouter which handles user profile like view, edit, password
 const profileRouter = express.Router();
-
-// To connect with userAuth
 const { userAuth } = require("../middleware/auth");
-const { validateEditProfileData } = require("../utils/validation");
 
-// PROFILE VIEW ROUTE (JWT Protected)
-profileRouter.get("/profile/view", userAuth, async (req, res) => {
-  try {
-    const user = req.user;
-    res.send(user);
-  } catch (err) {
-    res.status(401).send("ERROR : " + err.message);
-  }
+// ================= PROFILE VIEW =================
+profileRouter.get("/profile/view", userAuth, (req, res) => {
+  res.json(req.user);
 });
 
-// PROFILE EDIT ROUTE (JWT Protected)
+// 🔥 HANDLE PREFLIGHT REQUEST
+profileRouter.options("/profile/edit", (req, res) => {
+  res.sendStatus(200);
+});
+
+// ================= PROFILE EDIT =================
 profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
   try {
+    const user = req.user;
 
-    if (!validateEditProfileData(req)) {
-      throw new Error("Invalid edit request");
-    }
+    const allowedFields = [
+      "firstName",
+      "lastName",
+      "photoUrl",
+      "age",
+      "gender",
+      "about",
+    ];
 
-    const loggedInUser = req.user;
-
-    Object.keys(req.body).forEach((key) => {
-      loggedInUser[key] = req.body[key];
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        user[field] = req.body[field];
+      }
     });
 
-    await loggedInUser.save();
+    await user.save();
 
     res.json({
-      message: `${loggedInUser.firstName}, your profile updated successfully`,
-      data: loggedInUser,
+      message: "Profile updated successfully",
+      data: user,
     });
-
   } catch (err) {
-    res.status(400).send("ERROR : " + err.message);
+    console.error("PROFILE EDIT ERROR:", err);
+    res.status(500).json({ message: "Profile update failed" });
   }
 });
 
