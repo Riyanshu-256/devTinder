@@ -1,7 +1,27 @@
-const UserCard = ({ user }) => {
+import { sendIgnoredRequest, sendInterestedRequest } from "../utils/requestApi";
+
+const UserCard = ({ user, onAction }) => {
   if (!user) return null;
 
-  const { firstName, lastName, photoUrl, about } = user;
+  const { _id, firstName, lastName, photoUrl, about } = user;
+
+  const handleIgnore = async () => {
+    try {
+      await sendIgnoredRequest(_id);
+      onAction?.(_id);
+    } catch (err) {
+      console.error("Ignore failed", err.response?.data || err.message);
+    }
+  };
+
+  const handleInterested = async () => {
+    try {
+      await sendInterestedRequest(_id);
+      onAction?.(_id);
+    } catch (err) {
+      console.error("Interested failed", err.response?.data || err.message);
+    }
+  };
 
   return (
     <div className="card bg-base-300 w-96 shadow-xl p-4">
@@ -25,8 +45,13 @@ const UserCard = ({ user }) => {
 
       {/* ACTION BUTTONS */}
       <div className="flex justify-center gap-4 mt-4">
-        <button className="btn btn-primary w-20">Ignore</button>
-        <button className="btn btn-secondary w-20">Interested</button>
+        <button className="btn btn-primary w-24" onClick={handleIgnore}>
+          Ignore
+        </button>
+
+        <button className="btn btn-secondary w-24" onClick={handleInterested}>
+          Interested
+        </button>
       </div>
     </div>
   );

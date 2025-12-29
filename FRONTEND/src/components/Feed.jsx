@@ -12,22 +12,25 @@ const Feed = () => {
   useEffect(() => {
     const getFeed = async () => {
       try {
-        const res = await axios.get(BASE_URL + "/feed", {
+        const res = await axios.get(`${BASE_URL}/feed`, {
           withCredentials: true,
         });
 
-        const feedData = Array.isArray(res.data) ? res.data : res.data.data;
-
-        dispatch(addFeed(feedData));
+        dispatch(addFeed(res.data.data || res.data));
       } catch (err) {
-        console.log("Error while fetching feed", err);
+        console.log("Error fetching feed", err);
       }
     };
 
     getFeed();
   }, [dispatch]);
 
-  if (!Array.isArray(feed) || feed.length === 0) {
+  const removeUserFromFeed = (userId) => {
+    const updatedFeed = feed.filter((u) => u._id !== userId);
+    dispatch(addFeed(updatedFeed));
+  };
+
+  if (!feed || feed.length === 0) {
     return (
       <p className="text-center mt-10 text-gray-500">No users available</p>
     );
@@ -35,7 +38,7 @@ const Feed = () => {
 
   return (
     <div className="flex justify-center my-10">
-      <UserCard user={feed[0]} />
+      <UserCard user={feed[0]} onAction={removeUserFromFeed} />
     </div>
   );
 };
