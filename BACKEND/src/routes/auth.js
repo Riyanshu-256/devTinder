@@ -46,16 +46,16 @@ authRouter.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // IMPORTANT: this depends on JWT_SECRET
     const token = user.getJWT();
 
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "strict",
-      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      sameSite: "lax",
+      secure: false,
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
-    // never send password to frontend
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -67,10 +67,13 @@ authRouter.post("/login", async (req, res) => {
 
 /* ================= LOGOUT ================= */
 authRouter.post("/logout", (req, res) => {
-  res.cookie("token", null, {
+  res.cookie("token", "", {
     httpOnly: true,
-    expires: new Date(Date.now()),
+    sameSite: "lax",
+    secure: false,
+    expires: new Date(0),
   });
+
   res.json({ message: "Logout successful" });
 });
 
