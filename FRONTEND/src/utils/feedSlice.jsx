@@ -3,20 +3,25 @@ import { createSlice } from "@reduxjs/toolkit";
 const feedSlice = createSlice({
   name: "feed",
 
-  // ✅ FEED MUST ALWAYS BE AN ARRAY
   initialState: [],
 
   reducers: {
+    // For feed (home page users)
     addFeed: (state, action) => {
-      // ✅ payload should be an array of users
       return action.payload;
     },
 
+    // For connections page
+    addConnections: (state, action) => {
+      return action.payload;
+    },
+
+    // Clear feed / connections
     removeFeed: () => {
       return [];
     },
   },
 });
 
-export const { addFeed, removeFeed } = feedSlice.actions;
+export const { addFeed, addConnections, removeFeed } = feedSlice.actions;
 export default feedSlice.reducer;

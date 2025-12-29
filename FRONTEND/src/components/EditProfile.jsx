@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
+import { useSelector, useDispatch } from "react-redux";
+import { addUser } from "../utils/userSlice";
 
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 const EditProfile = () => {
+  const user = useSelector((store) => store.user);
+  const dispatch = useDispatch();
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
@@ -16,13 +21,25 @@ const EditProfile = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  // ✅ PREFILL DATA (LIKE NAMASTE NODE)
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.firstName || "");
+      setLastName(user.lastName || "");
+      setPhotoUrl(user.photoUrl || "");
+      setAge(user.age || "");
+      setGender(user.gender || "");
+      setAbout(user.about || "");
+    }
+  }, [user]);
+
   const handleSaveProfile = async () => {
     try {
       setLoading(true);
       setError("");
       setSuccess(false);
 
-      await axios.patch(
+      const res = await axios.patch(
         `${BASE_URL}/profile/edit`,
         {
           firstName,
@@ -34,12 +51,12 @@ const EditProfile = () => {
         },
         {
           withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
 
+      // ✅ UPDATE REDUX (VERY IMPORTANT)
+      dispatch(addUser(res.data.data));
       setSuccess(true);
     } catch (err) {
       setError(
@@ -55,7 +72,7 @@ const EditProfile = () => {
   return (
     <div className="flex justify-center items-start min-h-[85vh] bg-base-200 px-4 py-10 w-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl w-full">
-        {/* ================= LEFT : EDIT FORM ================= */}
+        {/* LEFT : EDIT FORM */}
         <div className="card bg-base-300 shadow-xl">
           <div className="card-body gap-4">
             <h2 className="text-2xl font-semibold text-center">Edit Profile</h2>
@@ -122,7 +139,7 @@ const EditProfile = () => {
           </div>
         </div>
 
-        {/* ================= RIGHT : LIVE PREVIEW ================= */}
+        {/* RIGHT : LIVE PREVIEW */}
         <div className="card bg-base-300 shadow-xl">
           <div className="card-body items-center text-center gap-3">
             <img
