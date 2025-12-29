@@ -1,16 +1,25 @@
 import { useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
 
+const DEFAULT_AVATAR = "https://geographyandyou.com/images/user-profile.png";
+
 const Profile = () => {
   const user = useSelector((store) => store.user);
   const navigate = useNavigate();
 
-  // Redirect if not logged in
-  if (!user) {
-    return <Navigate to="/login" />;
+  // ✅ SAFE LOGIN CHECK
+  if (!user || !user._id) {
+    return <Navigate to="/login" replace />;
   }
 
-  const { firstName, lastName, emailId, photoUrl, about, skills } = user;
+  const {
+    firstName = "",
+    lastName = "",
+    emailId = "",
+    photoUrl,
+    about,
+    skills = [],
+  } = user;
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-base-200">
@@ -18,14 +27,11 @@ const Profile = () => {
         <div className="card-body text-center gap-3">
           {/* PROFILE IMAGE */}
           <img
-            src={
-              photoUrl || "https://geographyandyou.com/images/user-profile.png"
-            }
+            src={photoUrl || DEFAULT_AVATAR}
             alt="profile"
             className="w-32 h-32 rounded-full object-cover mx-auto"
             onError={(e) => {
-              e.target.src =
-                "https://geographyandyou.com/images/user-profile.png";
+              e.currentTarget.src = DEFAULT_AVATAR;
             }}
           />
 
@@ -45,7 +51,7 @@ const Profile = () => {
           {about && <p className="text-gray-400 text-sm">{about}</p>}
 
           {/* SKILLS */}
-          {skills?.length > 0 && (
+          {skills.length > 0 && (
             <div className="flex flex-wrap justify-center gap-2 mt-2">
               {skills.map((skill, index) => (
                 <span key={index} className="badge badge-outline">
