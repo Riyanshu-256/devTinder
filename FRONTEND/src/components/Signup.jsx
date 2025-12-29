@@ -5,7 +5,9 @@ import { addUser } from "../utils/userSlice";
 import { BASE_URL } from "../utils/constants";
 import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+const Signup = () => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [emailId, setEmailId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,9 +16,9 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    if (!emailId || !password) {
-      setError("Email and Password are required");
+  const handleSignup = async () => {
+    if (!firstName || !lastName || !emailId || !password) {
+      setError("All fields are required");
       return;
     }
 
@@ -25,18 +27,23 @@ const Login = () => {
       setError("");
 
       const res = await axios.post(
-        `${BASE_URL}/login`,
-        { emailId, password },
+        `${BASE_URL}/signup`,
+        {
+          firstName,
+          lastName,
+          emailId,
+          password,
+        },
         { withCredentials: true }
       );
 
-      // Save user to Redux
+      // Save user in redux
       dispatch(addUser(res.data));
 
-      // Redirect after login
+      // Redirect to feed
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid email or password");
+      setError(err.response?.data?.message || "Signup failed");
     } finally {
       setLoading(false);
     }
@@ -46,7 +53,31 @@ const Login = () => {
     <div className="flex justify-center my-16">
       <div className="card bg-base-300 w-96 shadow-md">
         <div className="card-body gap-3">
-          <h2 className="card-title justify-center text-2xl">Login</h2>
+          <h2 className="card-title justify-center text-2xl">Signup</h2>
+
+          {/* First Name */}
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend py-2">First Name</legend>
+            <input
+              type="text"
+              className="input w-full"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Enter first name"
+            />
+          </fieldset>
+
+          {/* Last Name */}
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend py-2">Last Name</legend>
+            <input
+              type="text"
+              className="input w-full"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Enter last name"
+            />
+          </fieldset>
 
           {/* Email */}
           <fieldset className="fieldset">
@@ -68,7 +99,7 @@ const Login = () => {
               className="input w-full"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              placeholder="Create a password"
             />
           </fieldset>
 
@@ -79,25 +110,16 @@ const Login = () => {
           <div className="card-actions justify-center mt-2">
             <button
               className="btn btn-primary w-full"
-              onClick={handleLogin}
+              onClick={handleSignup}
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Creating account..." : "Signup"}
             </button>
           </div>
-          <p className="text-center text-sm mt-2">
-            New here?{" "}
-            <span
-              className="link link-primary cursor-pointer"
-              onClick={() => navigate("/signup")}
-            >
-              Create an account
-            </span>
-          </p>
         </div>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default Signup;

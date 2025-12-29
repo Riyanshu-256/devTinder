@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { addConnections } from "../utils/feedSlice";
@@ -8,10 +9,20 @@ const DEFAULT_AVATAR = "https://geographyandyou.com/images/user-profile.png";
 
 const Connections = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const user = useSelector((store) => store.user);
   const connections = useSelector((store) => store.feed);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  /* ================= AUTH GUARD ================= */
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   const fetchConnections = async () => {
     try {
@@ -22,20 +33,24 @@ const Connections = () => {
 
       dispatch(addConnections(res.data));
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to load connections. Please try again."
-      );
+      if (err.response?.status === 401) {
+        navigate("/login");
+      } else {
+        setError(
+          err.response?.data?.message ||
+            "Failed to load connections. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchConnections();
-  }, []);
+    if (user) fetchConnections();
+  }, [user]);
 
-  /* ================== LOADING STATE ================== */
+  /* ================= LOADING ================= */
   if (loading) {
     return (
       <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -49,7 +64,7 @@ const Connections = () => {
     );
   }
 
-  /* ================== ERROR STATE ================== */
+  /* ================= ERROR ================= */
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center mt-20 text-center">
@@ -64,7 +79,7 @@ const Connections = () => {
     );
   }
 
-  /* ================== EMPTY STATE ================== */
+  /* ================= EMPTY ================= */
   if (!connections || connections.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center mt-20 text-center">
@@ -76,7 +91,7 @@ const Connections = () => {
     );
   }
 
-  /* ================== MAIN UI ================== */
+  /* ================= UI ================= */
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6 text-center">Your Connections</h1>

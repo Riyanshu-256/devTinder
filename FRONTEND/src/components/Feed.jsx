@@ -1,15 +1,21 @@
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { addFeed } from "../utils/feedSlice";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import UserCard from "./UserCard";
 
 const Feed = () => {
   const dispatch = useDispatch();
   const feed = useSelector((store) => store.feed);
+  const user = useSelector((store) => store.user);
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // ✅ Agar login nahi hai → feed call mat karo
+    if (!user) return;
+
     const getFeed = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/feed`, {
@@ -18,17 +24,24 @@ const Feed = () => {
 
         dispatch(addFeed(res.data.data || res.data));
       } catch (err) {
-        console.log("Error fetching feed", err);
+        console.error("Feed error:", err.response?.data || err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
     getFeed();
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   const removeUserFromFeed = (userId) => {
-    const updatedFeed = feed.filter((u) => u._id !== userId);
-    dispatch(addFeed(updatedFeed));
+    dispatch(addFeed(feed.filter((u) => u._id !== userId)));
   };
+
+  /* ================= UI STATES ================= */
+
+  if (loading) {
+    return <p className="text-center mt-10 text-gray-400">Loading feed...</p>;
+  }
 
   if (!feed || feed.length === 0) {
     return (

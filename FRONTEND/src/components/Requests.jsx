@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { setRequests, removeRequest } from "../utils/requestSlice";
@@ -8,13 +9,25 @@ const DEFAULT_AVATAR = "https://geographyandyou.com/images/user-profile.png";
 
 const Requests = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const user = useSelector((store) => store.user);
   const requests = useSelector((store) => store.requests);
 
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
+  /* ================= AUTH GUARD ================= */
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
   /* ================= FETCH REQUESTS ================= */
   useEffect(() => {
+    if (!user) return;
+
     const fetchRequests = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/user/request/received`, {
@@ -23,14 +36,16 @@ const Requests = () => {
 
         dispatch(setRequests(res.data.data));
       } catch (err) {
-        console.error(err.response?.data || err.message);
+        if (err.response?.status === 401) {
+          navigate("/login");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchRequests();
-  }, [dispatch]);
+  }, [dispatch, user, navigate]);
 
   /* ================= ACCEPT / REJECT ================= */
   const handleReview = async (status, requestId) => {
@@ -45,7 +60,9 @@ const Requests = () => {
 
       dispatch(removeRequest(requestId));
     } catch (err) {
-      console.error(err.response?.data || err.message);
+      if (err.response?.status === 401) {
+        navigate("/login");
+      }
     } finally {
       setActionLoading(null);
     }
