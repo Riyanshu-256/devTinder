@@ -1,34 +1,33 @@
 const express = require("express");
-const router = express.Router();
-
-const userAuth = require("../middleware/auth");
+const { userAuth } = require("../middleware/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 
-router.post("/review/:status/:requestId", userAuth, async (req, res) => {
-  try {
-    const { status, requestId } = req.params;
+const requestRouter = express.Router();
 
-    if (!["accepted", "rejected"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
+requestRouter.post(
+  "/request/send/:status/:toUserId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const { status, toUserId } = req.params;
+
+      if (!["ignored", "interested"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const request = new ConnectionRequest({
+        fromUserId: req.user._id,
+        toUserId,
+        status,
+      });
+
+      await request.save();
+
+      res.json({ message: "Request sent successfully" });
+    } catch (err) {
+      res.status(400).json({ message: err.message });
     }
-
-    const request = await ConnectionRequest.findById(requestId);
-
-    if (!request) {
-      return res.status(404).json({ message: "Request not found" });
-    }
-
-    request.status = status;
-    await request.save();
-
-    res.json({
-      success: true,
-      message: `Request ${status} successfully`,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
 
-module.exports = router;
+module.exports = requestRouter;
