@@ -1,162 +1,137 @@
-// Import express
 const express = require("express");
+const userAuth = require("../middleware/auth");
 
-// Import userAuth middleware (to protect routes using JWT)
-const { userAuth } = require("../middleware/auth");
-
-// Import ConnectionRequest model
 const ConnectionRequest = require("../models/connectionRequest");
-
-// Import User model
 const User = require("../models/user");
 
-// Create a router for all user-related routes
 const userRouter = express.Router();
 
-// Safe fields that we can show publicly for a user
-const USER_SAFE_DATA = "firstName lastName age gender about skills photoUrl";
+const USER_SAFE_DATA =
+  "firstName lastName emailId age gender about skills photoUrl";
 
-// ======================================================================================================================== //
-// 1. GET all pending connection requests received by the logged-in user
-// Route → GET /user/request/received
-// Protected route → Only logged-in users can access (userAuth)
-userRouter.get("/user/request/received", userAuth, async (req, res) => {
+/* ===============================
+   GET RECEIVED REQUESTS
+   GET /user/request/received
+================================ */
+userRouter.get("/request/received", userAuth, async (req, res) => {
   try {
-    // Currently logged-in user
     const loggedInUser = req.user;
 
-    // Find all requests sent *to* the logged-in user with status = "interested"
-    const connectionRequest = await ConnectionRequest.find({
+    const requests = await ConnectionRequest.find({
       toUserId: loggedInUser._id,
       status: "interested",
-    })
-      // Populate only selected fields of the user who sent the request
-      .populate("fromUserId", ["firstName", "lastName", "photoUrl", "age"]);
+    }).populate("fromUserId", USER_SAFE_DATA);
 
-    // Send response
     res.json({
-      message: "Data fetched successfully",
-      data: connectionRequest,
+      message: "Requests fetched successfully",
+      data: requests,
     });
   } catch (err) {
-    // If error occurs
-    res.status(404).send("ERROR: " + err.message);
+    res.status(500).json({ message: err.message });
   }
 });
 
-// ======================================================================================================================== //
-// 2. GET all connected (accepted) users
-// Route → GET /user/connections
-userRouter.get("/user/connections", userAuth, async (req, res) => {
-  // Logged-in user's ID
-  const userId = req.user._id;
+/* ===============================
+   ACCEPT / REJECT REQUEST
+   PATCH /user/request/review/:status/:requestId
+================================ */
+userRouter.patch(
+  "/request/review/:status/:requestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const { status, requestId } = req.params;
+      const loggedInUserId = req.user._id;
 
-  try {
-    // Find all accepted connection requests where:
-    // - logged-in user sent request OR
-    // - logged-in user received request
-    const acceptedRequests = await ConnectionRequest.find({
-      $or: [
-        { fromUserId: userId, status: "accepted" },
-        { toUserId: userId, status: "accepted" },
-      ],
-    })
-      // Populate both sender and receiver user details
-      .populate("fromUserId toUserId", USER_SAFE_DATA);
+      if (!["accepted", "rejected"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
 
-    // Extract only the other person's data
-    const connections = acceptedRequests.map((request) => {
-      // If logged-in user is sender → return receiver
-      return request.fromUserId._id.toString() === userId.toString()
-        ? request.toUserId
-        : // Else return sender
-          request.fromUserId;
-    });
+      const request = await ConnectionRequest.findOne({
+        _id: requestId,
+        toUserId: loggedInUserId,
+        status: "interested",
+      });
 
-    // If no connections found
-    if (connections.length === 0) {
-      res.json({ message: "No connected users found." });
-      return;
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+
+      request.status = status;
+      await request.save();
+
+      res.json({ message: `Request ${status} successfully` });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
     }
-
-    // Success response
-    res.json({
-      message: "Connected users fetched successfully",
-      connections,
-    });
-  } catch (error) {
-    // Error response
-    res.status(500).json({
-      message: "Error fetching connected users",
-      error: error.message,
-    });
   }
-});
+);
 
-// ======================================================================================================================== //
-// 3. FEED API (Show users excluding blocked, requested, rejected, accepted users)
-// Note: User should see all the cards except
-// 1. his own card
-// 2. his connection request
-// 3. ignored people
-// 4. already the send the connection request
-
-// Example: [R, A, B, C, D, E] => R -> A and R => E => Accepted
-// R => A (REJECTED)    R => C(accepted)
-// R shows the card => [A, B, D, E]
-
-// Route → GET /feed?page=1&limit=10
+/* ===============================
+   FEED
+   GET /user/feed
+================================ */
 userRouter.get("/feed", userAuth, async (req, res) => {
   try {
-    // Logged-in user
     const loggedInUser = req.user;
 
-    // Pagination settings
     const page = parseInt(req.query.page) || 1;
     let limit = parseInt(req.query.limit) || 10;
-
-    // Limit should not exceed 50
     limit = limit > 50 ? 50 : limit;
 
-    // Skip users based on pagination
     const skip = (page - 1) * limit;
 
-    // Find all connection requests involving the logged-in user
-    const connectionRequests = await ConnectionRequest.find({
+    const requests = await ConnectionRequest.find({
       $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
     }).select("fromUserId toUserId");
 
-    // Create a set of all users that should NOT appear in feed
-    const hideUsersFromFeed = new Set();
-
-    // Add both sender and receiver IDs to the hidden list
-    connectionRequests.forEach((reqData) => {
-      hideUsersFromFeed.add(reqData.fromUserId.toString());
-      hideUsersFromFeed.add(reqData.toUserId.toString());
+    const hideUsers = new Set();
+    requests.forEach((r) => {
+      hideUsers.add(r.fromUserId.toString());
+      hideUsers.add(r.toUserId.toString());
     });
 
-    // Find all users EXCEPT:
-    // 1. Logged-in user
-    // 2. Users who are already sent/received requests
     const users = await User.find({
-      $and: [
-        { _id: { $nin: Array.from(hideUsersFromFeed) } },
-        { _id: { $ne: loggedInUser._id } },
-      ],
+      _id: { $nin: [...hideUsers, loggedInUser._id] },
     })
-      // Select only safe fields
       .select(USER_SAFE_DATA)
-      // Pagination
       .skip(skip)
       .limit(limit);
 
-    // Send feed data
     res.json({ data: users });
   } catch (err) {
-    // Error response
-    res.status(404).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
-// Export router
+/* ===============================
+   CONNECTIONS
+   GET /user/connections
+================================ */
+userRouter.get("/connections", userAuth, async (req, res) => {
+  try {
+    const loggedInUserId = req.user._id;
+
+    // find accepted connections
+    const connections = await ConnectionRequest.find({
+      status: "accepted",
+      $or: [{ fromUserId: loggedInUserId }, { toUserId: loggedInUserId }],
+    })
+      .populate("fromUserId", USER_SAFE_DATA)
+      .populate("toUserId", USER_SAFE_DATA);
+
+    // extract the OTHER user
+    const connectedUsers = connections.map((req) => {
+      if (req.fromUserId._id.toString() === loggedInUserId.toString()) {
+        return req.toUserId;
+      }
+      return req.fromUserId;
+    });
+
+    res.json(connectedUsers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = userRouter;

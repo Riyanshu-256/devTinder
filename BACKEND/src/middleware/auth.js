@@ -3,40 +3,24 @@ const User = require("../models/user");
 
 const userAuth = async (req, res, next) => {
   try {
-    // 🔥 VERY IMPORTANT: allow preflight requests
-    if (req.method === "OPTIONS") {
-      return next();
-    }
-
-    let token = req.cookies?.token;
+    const token = req.cookies?.token;
 
     if (!token) {
-      const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        token = authHeader.substring(7);
-      }
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (!token) {
-      return res.status(401).send("Please Login!!!");
-    }
-
-    const decodedObj = jwt.verify(token, process.env.JWT_SECRET);
-    const { _id } = decodedObj;
-
-    const user = await User.findById(_id);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded._id);
 
     if (!user) {
-      return res.status(401).send("User not found");
+      return res.status(401).json({ message: "User not found" });
     }
 
     req.user = user;
     next();
   } catch (err) {
-    res.status(401).send("ERROR: " + err.message);
+    res.status(401).json({ message: "Invalid token" });
   }
 };
 
-module.exports = {
-  userAuth,
-};
+module.exports = userAuth;
