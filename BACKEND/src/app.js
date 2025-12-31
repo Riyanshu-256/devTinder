@@ -12,12 +12,36 @@ const userRouter = require("./routes/user");
 const app = express();
 
 /* ================= MIDDLEWARE ================= */
+
 app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
   })
 );
+
+app.options(/.*/, cors());
+
+// app.use(
+//   cors({
+//     // list of frontend URLs that are allowed to make requests
+//     origin: process.env.FRONTEND_URL
+//       ? process.env.FRONTEND_URL.split(",")
+//       : [
+//           "http://localhost:5173",
+//           "http://localhost:3000",
+//           "http://localhost:5174",
+//         ],
+//     // allow cookies to be sent with requests - needed for authentication
+//     credentials: true,
+//     // which HTTP methods are allowed
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     // which headers can be sent
+//     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+//     // expose Set-Cookie header so frontend knows about cookies
+//     exposedHeaders: ["Set-Cookie"],
+//   })
+// );
 
 app.use(express.json());
 app.use(cookieParser());
