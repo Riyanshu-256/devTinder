@@ -25,7 +25,10 @@ authRouter.post("/signup", async (req, res) => {
     });
 
     await user.save();
-    res.status(201).json({ message: "User registered successfully" });
+
+    res.status(201).json({
+      message: "User registered successfully",
+    });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -46,13 +49,14 @@ authRouter.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    // ✅ Generate JWT
     const token = user.getJWT();
 
+    // ✅ FIXED COOKIE (VERY IMPORTANT)
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-      path: "/",
+      sameSite: "lax", // localhost ke liye correct
+      secure: false, // prod me true
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
@@ -67,12 +71,11 @@ authRouter.post("/login", async (req, res) => {
 
 /* ================= LOGOUT ================= */
 authRouter.post("/logout", (req, res) => {
-  res.cookie("token", "", {
+  // ✅ CLEAR COOKIE PROPERLY
+  res.clearCookie("token", {
     httpOnly: true,
     sameSite: "lax",
     secure: false,
-    expires: new Date(0),
-    path: "/",
   });
 
   res.json({ message: "Logout successful" });

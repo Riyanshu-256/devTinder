@@ -25,15 +25,12 @@ const Login = () => {
       setError("");
 
       const res = await axios.post(
-        `${BASE_URL}/login`,
+        `${BASE_URL}/auth/login`, // ✅ FIXED
         { emailId, password },
         { withCredentials: true }
       );
 
-      // Save user to Redux
       dispatch(addUser(res.data));
-
-      // Redirect after login
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
@@ -48,7 +45,6 @@ const Login = () => {
         <div className="card-body gap-3">
           <h2 className="card-title justify-center text-2xl">Login</h2>
 
-          {/* Email */}
           <fieldset className="fieldset">
             <legend className="fieldset-legend py-2">Email</legend>
             <input
@@ -60,7 +56,6 @@ const Login = () => {
             />
           </fieldset>
 
-          {/* Password */}
           <fieldset className="fieldset">
             <legend className="fieldset-legend py-2">Password</legend>
             <input
@@ -72,10 +67,8 @@ const Login = () => {
             />
           </fieldset>
 
-          {/* Error */}
           {error && <p className="text-error text-sm text-center">{error}</p>}
 
-          {/* Button */}
           <div className="card-actions justify-center mt-2">
             <button
               className="btn btn-primary w-full"
@@ -85,6 +78,7 @@ const Login = () => {
               {loading ? "Logging in..." : "Login"}
             </button>
           </div>
+
           <p className="text-center text-sm mt-2">
             New here?{" "}
             <span

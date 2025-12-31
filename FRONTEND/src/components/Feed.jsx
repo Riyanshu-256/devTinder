@@ -13,14 +13,14 @@ const Feed = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ Agar login nahi hai → feed call mat karo
     if (!user) return;
 
     const getFeed = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/feed`, {
-          withCredentials: true,
-        });
+        const res = await axios.get(
+          `${BASE_URL}/user/feed`, // ✅ FIXED
+          { withCredentials: true }
+        );
 
         dispatch(addFeed(res.data.data || res.data));
       } catch (err) {
@@ -36,8 +36,6 @@ const Feed = () => {
   const removeUserFromFeed = (userId) => {
     dispatch(addFeed(feed.filter((u) => u._id !== userId)));
   };
-
-  /* ================= UI STATES ================= */
 
   if (loading) {
     return <p className="text-center mt-10 text-gray-400">Loading feed...</p>;
