@@ -72,6 +72,7 @@ authRouter.post("/logout", (req, res) => {
     sameSite: "lax",
     secure: false,
     expires: new Date(0),
+    path: "/",
   });
 
   res.json({ message: "Logout successful" });
