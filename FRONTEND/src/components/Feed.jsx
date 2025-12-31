@@ -4,6 +4,7 @@ import { addFeed } from "../utils/feedSlice";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import UserCard from "./UserCard";
+import { SkeletonCard } from "./Skeleton";
 
 const Feed = () => {
   const dispatch = useDispatch();
@@ -17,10 +18,9 @@ const Feed = () => {
 
     const getFeed = async () => {
       try {
-        const res = await axios.get(
-          `${BASE_URL}/user/feed`, // ✅ FIXED
-          { withCredentials: true }
-        );
+        const res = await axios.get(`${BASE_URL}/user/feed`, {
+          withCredentials: true,
+        });
 
         dispatch(addFeed(res.data.data || res.data));
       } catch (err) {
@@ -38,17 +38,32 @@ const Feed = () => {
   };
 
   if (loading) {
-    return <p className="text-center mt-10 text-gray-400">Loading feed...</p>;
+    return (
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
+        <SkeletonCard />
+      </div>
+    );
   }
 
   if (!feed || feed.length === 0) {
     return (
-      <p className="text-center mt-10 text-gray-500">No users available</p>
+      <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center text-center px-4">
+        <div className="card-modern p-12 max-w-md">
+          <div className="text-6xl mb-4">👋</div>
+          <h2 className="text-2xl font-bold text-gray-100 mb-2">
+            No More Profiles
+          </h2>
+          <p className="text-gray-400">
+            You've seen all available developers. Check back later for new
+            connections!
+          </p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="flex justify-center my-10">
+    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
       <UserCard user={feed[0]} onAction={removeUserFromFeed} />
     </div>
   );

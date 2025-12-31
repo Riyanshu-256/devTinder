@@ -1,3 +1,112 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-dark-bg text-gray-100 font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Glassmorphism */
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-strong {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 bg-clip-text text-transparent;
+  }
+
+  /* Buttons */
+  .btn-modern {
+    @apply px-6 py-3 rounded-xl font-medium transition-all duration-200;
+    @apply bg-gradient-to-r from-primary-600 to-primary-700 text-white;
+    @apply hover:from-primary-500 hover:to-primary-600;
+    @apply active:scale-95;
+    @apply shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40;
+  }
+
+  .btn-modern-outline {
+    @apply px-6 py-3 rounded-xl font-medium transition-all duration-200;
+    @apply border-2 border-primary-500 text-primary-400;
+    @apply hover:bg-primary-500/10 hover:border-primary-400;
+    @apply active:scale-95;
+  }
+
+  /* Inputs */
+  .input-modern {
+    @apply w-full px-4 py-3 rounded-xl;
+    @apply bg-dark-card border border-dark-border;
+    @apply text-gray-100 placeholder:text-gray-500;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply transition-all duration-200;
+  }
+
+  /* Cards */
+  .card-modern {
+    @apply rounded-2xl bg-dark-card border border-dark-border;
+    @apply shadow-xl shadow-black/20;
+    @apply transition-all duration-300;
+  }
+
+  .card-modern-hover {
+    @apply hover:shadow-2xl hover:shadow-primary-500/10;
+    @apply hover:-translate-y-1;
+    @apply hover:border-primary-500/30;
+  }
+
+  /* Skeleton */
+  .skeleton {
+    @apply animate-pulse bg-dark-card rounded-xl;
+  }
+
+  /* Avatar ring */
+  .avatar-ring {
+    @apply relative;
+  }
+
+  .avatar-ring::before {
+    content: "";
+    @apply absolute inset-0 rounded-full;
+    @apply bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700;
+    @apply p-[2px] -z-10 opacity-50;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-dark-surface;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-dark-border rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-600;
+}

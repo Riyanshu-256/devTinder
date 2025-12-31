@@ -4,8 +4,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { addConnections } from "../utils/feedSlice";
+import Skeleton, { SkeletonConnectionCard } from "./Skeleton";
 
-const DEFAULT_AVATAR = "https://geographyandyou.com/images/user-profile.png";
+const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 const Connections = () => {
   const dispatch = useDispatch();
@@ -17,7 +18,6 @@ const Connections = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /* ================= AUTH GUARD ================= */
   useEffect(() => {
     if (!user) {
       navigate("/login");
@@ -50,87 +50,124 @@ const Connections = () => {
     if (user) fetchConnections();
   }, [user]);
 
-  /* ================= LOADING ================= */
   if (loading) {
     return (
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="animate-pulse bg-base-300 rounded-2xl p-6 h-64"
-          />
-        ))}
+      <div className="min-h-[calc(100vh-200px)] px-4 py-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <Skeleton variant="title" className="h-8 w-64" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <SkeletonConnectionCard key={i} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
-  /* ================= ERROR ================= */
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center mt-20 text-center">
-        <p className="text-error text-lg font-semibold">{error}</p>
-        <button
-          onClick={fetchConnections}
-          className="btn btn-outline btn-primary mt-4"
-        >
-          Retry
-        </button>
+      <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center text-center px-4">
+        <div className="card-modern p-8 max-w-md">
+          <div className="text-6xl mb-4">😕</div>
+          <h2 className="text-2xl font-bold text-gray-100 mb-2">Oops!</h2>
+          <p className="text-red-400 mb-6">{error}</p>
+          <button onClick={fetchConnections} className="btn-modern">
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
-  /* ================= EMPTY ================= */
   if (!connections || connections.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center mt-20 text-center">
-        <h2 className="text-xl font-bold">No Connections Yet</h2>
-        <p className="text-gray-400 mt-2">
-          Start connecting with people to grow your network
-        </p>
+      <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center text-center px-4">
+        <div className="card-modern p-12 max-w-md">
+          <div className="text-6xl mb-4">🔗</div>
+          <h2 className="text-2xl font-bold text-gray-100 mb-2">
+            No Connections Yet
+          </h2>
+          <p className="text-gray-400 mb-6">
+            Start connecting with developers to grow your network
+          </p>
+        </div>
       </div>
     );
   }
 
-  /* ================= UI ================= */
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-center">Your Connections</h1>
+    <div className="min-h-[calc(100vh-200px)] px-4 py-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold gradient-text mb-2">
+            Your Connections
+          </h1>
+          <p className="text-gray-400">
+            {connections.length} {connections.length === 1 ? "connection" : "connections"}
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {connections.map((user) => (
-          <div
-            key={user._id}
-            className="card bg-base-300 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-          >
-            <div className="card-body items-center text-center">
-              <img
-                src={user.photoUrl || DEFAULT_AVATAR}
-                alt="profile"
-                className="w-24 h-24 rounded-full object-cover border-4 border-base-100"
-              />
-
-              <h2 className="card-title mt-4 text-lg">
-                {user.firstName} {user.lastName}
-              </h2>
-
-              {user.about && (
-                <p className="text-sm text-gray-400 line-clamp-2">
-                  {user.about}
-                </p>
-              )}
-
-              {user.skills?.length > 0 && (
-                <div className="flex flex-wrap gap-2 justify-center mt-3">
-                  {user.skills.map((skill, index) => (
-                    <span key={index} className="badge badge-outline badge-sm">
-                      {skill}
-                    </span>
-                  ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {connections.map((connection) => (
+            <div
+              key={connection._id}
+              className="card-modern card-modern-hover p-6 group"
+            >
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="relative">
+                  <div className="avatar-ring">
+                    <img
+                      src={connection.photoUrl || DEFAULT_AVATAR}
+                      alt="profile"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-dark-border group-hover:border-primary-500/50 transition-colors"
+                      onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
+                    />
+                  </div>
                 </div>
-              )}
+
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-100">
+                    {connection.firstName} {connection.lastName}
+                  </h2>
+                  {(connection.age || connection.gender) && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {connection.age && `${connection.age} years`}
+                      {connection.age && connection.gender && " • "}
+                      {connection.gender}
+                    </p>
+                  )}
+                </div>
+
+                {connection.about && (
+                  <p className="text-sm text-gray-300 line-clamp-3 leading-relaxed">
+                    {connection.about}
+                  </p>
+                )}
+
+                {connection.skills?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 justify-center w-full">
+                    {connection.skills.slice(0, 4).map((skill, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 rounded-lg bg-primary-500/20 text-primary-300 text-xs border border-primary-500/30"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                    {connection.skills.length > 4 && (
+                      <span className="px-3 py-1 rounded-lg bg-dark-border text-gray-400 text-xs">
+                        +{connection.skills.length - 4}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

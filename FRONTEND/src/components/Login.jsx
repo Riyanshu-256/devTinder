@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
 import { BASE_URL } from "../utils/constants";
 import { useNavigate } from "react-router-dom";
+import { addToast } from "../utils/toastSlice";
 
 const Login = () => {
   const [emailId, setEmailId] = useState("");
@@ -25,68 +26,94 @@ const Login = () => {
       setError("");
 
       const res = await axios.post(
-        `${BASE_URL}/auth/login`, // ✅ FIXED
+        `${BASE_URL}/auth/login`,
         { emailId, password },
         { withCredentials: true }
       );
 
       dispatch(addUser(res.data));
+      dispatch(addToast({ message: "Welcome back!", type: "success" }));
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid email or password");
+      const errorMsg = err.response?.data?.message || "Invalid email or password";
+      setError(errorMsg);
+      dispatch(addToast({ message: errorMsg, type: "error" }));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center my-16">
-      <div className="card bg-base-300 w-96 shadow-md">
-        <div className="card-body gap-3">
-          <h2 className="card-title justify-center text-2xl">Login</h2>
+    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="glass-strong rounded-2xl p-8 shadow-2xl border border-primary-500/20 animate-fade-in">
+          {/* Logo/Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold gradient-text mb-2">DevTinder</h1>
+            <p className="text-gray-400 text-sm">Welcome back, developer</p>
+          </div>
 
-          <fieldset className="fieldset">
-            <legend className="fieldset-legend py-2">Email</legend>
-            <input
-              type="email"
-              className="input w-full"
-              value={emailId}
-              onChange={(e) => setEmailId(e.target.value)}
-              placeholder="Enter your email"
-            />
-          </fieldset>
+          {/* Form */}
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                className="input-modern"
+                value={emailId}
+                onChange={(e) => setEmailId(e.target.value)}
+                placeholder="you@example.com"
+                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+              />
+            </div>
 
-          <fieldset className="fieldset">
-            <legend className="fieldset-legend py-2">Password</legend>
-            <input
-              type="password"
-              className="input w-full"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-            />
-          </fieldset>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                className="input-modern"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+              />
+            </div>
 
-          {error && <p className="text-error text-sm text-center">{error}</p>}
+            {error && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                {error}
+              </div>
+            )}
 
-          <div className="card-actions justify-center mt-2">
             <button
-              className="btn btn-primary w-full"
+              className="btn-modern w-full"
               onClick={handleLogin}
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Logging in...
+                </span>
+              ) : (
+                "Login"
+              )}
             </button>
           </div>
 
-          <p className="text-center text-sm mt-2">
+          {/* Footer */}
+          <p className="text-center text-sm text-gray-400 mt-6">
             New here?{" "}
-            <span
-              className="link link-primary cursor-pointer"
+            <button
+              className="text-primary-400 hover:text-primary-300 font-medium transition-colors"
               onClick={() => navigate("/signup")}
             >
               Create an account
-            </span>
+            </button>
           </p>
         </div>
       </div>

@@ -4,8 +4,10 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { setRequests, removeRequest } from "../utils/requestSlice";
+import { addToast } from "../utils/toastSlice";
+import Skeleton from "./Skeleton";
 
-const DEFAULT_AVATAR = "https://geographyandyou.com/images/user-profile.png";
+const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 const Requests = () => {
   const dispatch = useDispatch();
@@ -17,14 +19,12 @@ const Requests = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
-  /* ================= AUTH GUARD ================= */
   useEffect(() => {
     if (!user) {
       navigate("/login");
     }
   }, [user, navigate]);
 
-  /* ================= FETCH REQUESTS ================= */
   useEffect(() => {
     if (!user) return;
 
@@ -47,7 +47,6 @@ const Requests = () => {
     fetchRequests();
   }, [dispatch, user, navigate]);
 
-  /* ================= ACCEPT / REJECT ================= */
   const handleReview = async (status, requestId) => {
     try {
       setActionLoading(requestId);
@@ -59,100 +58,173 @@ const Requests = () => {
       );
 
       dispatch(removeRequest(requestId));
+      dispatch(
+        addToast({
+          message: `Request ${status === "accepted" ? "accepted" : "rejected"}!`,
+          type: status === "accepted" ? "success" : "info",
+        })
+      );
     } catch (err) {
       if (err.response?.status === 401) {
         navigate("/login");
+      } else {
+        dispatch(addToast({ message: "Action failed", type: "error" }));
       }
     } finally {
       setActionLoading(null);
     }
   };
 
-  /* ================= LOADING ================= */
   if (loading) {
     return (
-      <div className="p-6 max-w-4xl mx-auto space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-36 bg-base-300 rounded-xl animate-pulse" />
-        ))}
+      <div className="min-h-[calc(100vh-200px)] px-4 py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Skeleton variant="title" className="h-8 w-64" />
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="card-modern p-6">
+              <div className="flex gap-6">
+                <Skeleton variant="avatar" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton variant="title" className="h-6 w-48" />
+                  <Skeleton variant="text" className="w-full" />
+                  <Skeleton variant="text" className="w-3/4" />
+                  <div className="flex gap-2">
+                    <Skeleton variant="button" className="h-6 w-16" />
+                    <Skeleton variant="button" className="h-6 w-16" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  /* ================= EMPTY ================= */
   if (!requests || requests.length === 0) {
     return (
-      <div className="text-center mt-16 text-gray-400 text-lg">
-        No connection requests
+      <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center text-center px-4">
+        <div className="card-modern p-12 max-w-md">
+          <div className="text-6xl mb-4">📬</div>
+          <h2 className="text-2xl font-bold text-gray-100 mb-2">
+            No Connection Requests
+          </h2>
+          <p className="text-gray-400">
+            You don't have any pending connection requests at the moment
+          </p>
+        </div>
       </div>
     );
   }
 
-  /* ================= UI ================= */
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Connection Requests</h1>
+    <div className="min-h-[calc(100vh-200px)] px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold gradient-text mb-2">
+            Connection Requests
+          </h1>
+          <p className="text-gray-400">
+            {requests.length} {requests.length === 1 ? "request" : "requests"} pending
+          </p>
+        </div>
 
-      {requests.map((req) => {
-        const user = req.fromUserId;
-        if (!user) return null;
+        <div className="space-y-4">
+          {requests.map((req) => {
+            const requestUser = req.fromUserId;
+            if (!requestUser) return null;
 
-        return (
-          <div
-            key={req._id}
-            className="bg-base-300 rounded-xl p-6 shadow-md flex gap-6 items-center"
-          >
-            <img
-              src={user.photoUrl || DEFAULT_AVATAR}
-              alt="profile"
-              className="w-24 h-24 rounded-full object-cover border"
-            />
+            const isLoading = actionLoading === req._id;
 
-            <div className="flex-1 space-y-2">
-              <h2 className="text-xl font-semibold">
-                {user.firstName} {user.lastName}
-              </h2>
+            return (
+              <div
+                key={req._id}
+                className="card-modern card-modern-hover p-6 animate-fade-in"
+              >
+                <div className="flex flex-col sm:flex-row gap-6">
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    <div className="avatar-ring">
+                      <img
+                        src={requestUser.photoUrl || DEFAULT_AVATAR}
+                        alt="profile"
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-dark-border"
+                        onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
+                      />
+                    </div>
+                  </div>
 
-              <p className="text-sm text-gray-400">📧 {user.emailId}</p>
+                  {/* Info */}
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-100">
+                        {requestUser.firstName} {requestUser.lastName}
+                      </h2>
+                      <p className="text-sm text-gray-400 mt-1">
+                        {requestUser.emailId}
+                      </p>
+                    </div>
 
-              {(user.age || user.gender) && (
-                <p className="text-sm text-gray-400">
-                  {user.age && `${user.age} yrs`}
-                  {user.gender && ` • ${user.gender}`}
-                </p>
-              )}
+                    {(requestUser.age || requestUser.gender) && (
+                      <p className="text-sm text-gray-400">
+                        {requestUser.age && `${requestUser.age} years`}
+                        {requestUser.age && requestUser.gender && " • "}
+                        {requestUser.gender}
+                      </p>
+                    )}
 
-              {user.skills?.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {user.skills.map((skill, i) => (
-                    <span key={i} className="badge badge-primary badge-outline">
-                      {skill}
-                    </span>
-                  ))}
+                    {requestUser.about && (
+                      <p className="text-sm text-gray-300 leading-relaxed">
+                        {requestUser.about}
+                      </p>
+                    )}
+
+                    {requestUser.skills?.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {requestUser.skills.map((skill, i) => (
+                          <span
+                            key={i}
+                            className="px-3 py-1 rounded-lg bg-primary-500/20 text-primary-300 text-xs border border-primary-500/30"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex sm:flex-col gap-3 sm:justify-start">
+                    <button
+                      className="btn-modern flex-1 sm:flex-none min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isLoading}
+                      onClick={() => handleReview("accepted", req._id)}
+                    >
+                      {isLoading ? (
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        "✓ Accept"
+                      )}
+                    </button>
+
+                    <button
+                      className="btn-modern-outline flex-1 sm:flex-none min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isLoading}
+                      onClick={() => handleReview("rejected", req._id)}
+                    >
+                      {isLoading ? (
+                        <span className="w-4 h-4 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
+                      ) : (
+                        "✕ Reject"
+                      )}
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <button
-                className="btn btn-primary btn-sm"
-                disabled={actionLoading === req._id}
-                onClick={() => handleReview("accepted", req._id)}
-              >
-                Accept
-              </button>
-
-              <button
-                className="btn btn-outline btn-sm"
-                disabled={actionLoading === req._id}
-                onClick={() => handleReview("rejected", req._id)}
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        );
-      })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };

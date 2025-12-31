@@ -5,6 +5,7 @@ import { BASE_URL } from "../utils/constants";
 import { addUser } from "../utils/userSlice";
 import NavBar from "./NavBar";
 import Footer from "./Footer";
+import ToastContainer from "./ToastContainer";
 import { useEffect, useCallback } from "react";
 
 const PUBLIC_ROUTES = ["/login", "/signup"];
@@ -34,11 +35,14 @@ const Body = () => {
   }, [location.pathname, user?._id, fetchUser]);
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-dark-bg">
       <NavBar />
-      <Outlet />
+      <main className="flex-1">
+        <Outlet />
+      </main>
       <Footer />
-    </>
+      <ToastContainer />
+    </div>
   );
 };
 
